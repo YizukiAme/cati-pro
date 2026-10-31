@@ -409,7 +409,7 @@
       // 猜错的每个维度，按 ta 真实的方向给一句话
       var g = cat(guessId), diff = E.guessDiff(g.v, real.v);
       var lines = diff.map(function (d) { return D.GUESS[d.key][d.real]; });
-      if (diff.length === 0) { verdict = '猜中了！(≧▽≦)'; sub = '世界上还能找到第二个你这样懂 ta 的人吗？！'; }
+      if (diff.length === 0) { verdict = '猜中了！(≧▽≦)'; sub = '世界上还能找到第二个这么懂 ta 的人吗？！'; }
       else if (diff.length === 1) { verdict = '差一点！(｡•́︿•̀｡)'; sub = '你猜的是' + g.name + '，只差一处：' + lines[0]; }
       else if (diff.length === 2) { verdict = '猜对了一半'; sub = '你猜的是' + g.name + '。' + lines.join(''); }
       else if (diff.length === 3) { verdict = 'ta 藏得有点深(・_・?)'; sub = '你猜的是' + g.name + '。' + lines.slice(0, 2).join('') + '剩下那一处，你自己去问 ta 吧。'; }
