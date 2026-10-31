@@ -69,8 +69,8 @@
     function catForScores(s) { return catForSigns(signs(s)); }
 
     // 成分表：离每只猫越近，占比越高
-    function mix(s) {
-      var k = D.META.mixSharpness;
+    function mix(s, sharpness) {
+      var k = sharpness == null ? D.META.mixSharpness : sharpness;
       var list = D.CATS.map(function (c) {
         var dist = 0;
         for (var i = 0; i < 4; i++) dist += Math.abs(s[i] - c.v[i]);
@@ -136,6 +136,7 @@
         s: s,
         catId: cat.id,
         hiddenId: hiddenFor(s, answers),
+        mixSharpness: D.META.mixSharpness,
         mix: mix(s),
         says: says(answers, s)
       };
@@ -182,19 +183,34 @@
       return diff;
     }
 
-    // 分享链接：#g-猫-四个维度
-    // 维度量化到 -9…9，写成 a…s，只用字母和连字符
+    // v2 保存结果快照，不再量化分数。Base64url 用于防直观剧透，不是加密。
+    // 不包含逐题答案；保存成分表参数，让以后调参也不改变已分享的占比。
     function encode(r) {
-      var id = r.hiddenId || r.catId;
-      var dims = r.s.map(function (x) {
-        var q = Math.max(-9, Math.min(9, Math.round(x * 9)));
-        if (q === 0) q = x >= 0 ? 1 : -1;
-        return String.fromCharCode(97 + q + 9);
-      }).join('');
-      return 'g-' + id + '-' + dims;
+      var data = [r.s, r.catId, r.hiddenId || null, r.says || [], r.mixSharpness == null ? D.META.mixSharpness : r.mixSharpness];
+      var bytes = new TextEncoder().encode(JSON.stringify(data));
+      var binary = Array.from(bytes, function (b) { return String.fromCharCode(b); }).join('');
+      return 'r2-' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
     function decode(hash) {
+      var token = (hash || '').replace(/^#/, '');
+      if (/^r2-/.test(token)) {
+        try {
+          var binary = atob(token.slice(3).replace(/-/g, '+').replace(/_/g, '/'));
+          var bytes = Uint8Array.from(binary, function (ch) { return ch.charCodeAt(0); });
+          var data = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+          if (!Array.isArray(data) || data.length !== 5) return null;
+          var s = data[0], id = data[1], hidden = data[2], observations = data[3], sharpness = data[4];
+          if (!Array.isArray(s) || s.length !== 4 || !s.every(function (x) { return Number.isFinite(x) && Math.abs(x) <= 1; })) return null;
+          if (!byId[id] || byId[id].hidden || catForScores(s).id !== id) return null;
+          if (hidden !== null && (!byId[hidden] || !byId[hidden].hidden)) return null;
+          if (!Array.isArray(observations) || observations.length > 3 || !observations.every(function (x) { return typeof x === 'string'; })) return null;
+          if (!Number.isFinite(sharpness) || sharpness <= 0 || sharpness > 100) return null;
+          return { s: s, catId: id, hiddenId: hidden, says: observations, mixSharpness: sharpness, mix: mix(s, sharpness) };
+        } catch (e) { return null; }
+      }
+
+      // 兼容已发出的旧链接；它们丢失的精度和个性句子无法恢复。
       var m = /^#?g-([a-z]+)-([a-s]{4})$/.exec(hash || '');
       if (!m || !byId[m[1]]) return null;
       var s = m[2].split('').map(function (ch) { return (ch.charCodeAt(0) - 97 - 9) / 9; });
@@ -202,7 +218,7 @@
       var id = m[1];
       var hidden = byId[id].hidden ? id : null;
       // 普通猫的 id 必须和维度对得上，对不上就以维度为准
-      return { s: s, catId: cat.id, hiddenId: hidden, mix: mix(s) };
+      return { s: s, catId: cat.id, hiddenId: hidden, mix: mix(s), legacy: true };
     }
 
     return {

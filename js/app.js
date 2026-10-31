@@ -217,7 +217,7 @@
 
   function finish() {
     var r = E.result(state.answers);
-    store.set('me', { s: r.s, catId: r.catId, hiddenId: r.hiddenId, says: r.says, ts: Date.now() });
+    store.set('me', { s: r.s, catId: r.catId, hiddenId: r.hiddenId, says: r.says, mixSharpness: r.mixSharpness, ts: Date.now() });
     state.result = r;
     renderResult(r);
     show('result');
@@ -256,7 +256,7 @@
 
   // 「你身上还带点 X 的影子」：成分表的第二、第三名，按前三名之间的比例换算
   function subCats(r, who) {
-    var top = E.mix(r.s).slice(0, 3);
+    var top = E.mix(r.s, r.mixSharpness).slice(0, 3);
     var sum = top.reduce(function (x, y) { return x + y.p; }, 0);
     var box = h('div', { class: 'sub-cats' });
     top.forEach(function (m, i) {
@@ -294,11 +294,11 @@
     return t;
   }
 
-  function saysBox(says) {
+  function saysBox(says, who) {
     if (!says || !says.length) return null;
     var ul = h('ul', { class: 'says' });
     says.forEach(function (s) { ul.appendChild(h('li', { text: s })); });
-    return h('div', { class: 'box' }, [h('p', { class: 'box-title', text: '从你的答案里看到' }), ul]);
+    return h('div', { class: 'box' }, [h('p', { class: 'box-title', text: '从' + (who || '你') + '的答案里看到' }), ul]);
   }
 
   // 最佳配对、最佳友伴，跟原版一样
@@ -384,6 +384,7 @@
       h('h1', { text: '猜猜 ta 是哪只小猫' }),
       h('p', { text: '猜对了，说明你懂 ta(｀・ω・´)' })
     ]));
+    if (state.friend.legacy) root.appendChild(legacyNotice());
     var grid = h('div', { class: 'pick-grid' });
     D.CATS.forEach(function (c) {
       grid.appendChild(h('button', { class: 'pick', type: 'button', 'aria-label': '猜 ta 是' + c.name, on: { click: function () { reveal(c.id); } } }, [
@@ -392,6 +393,10 @@
     });
     root.appendChild(grid);
     root.appendChild(h('button', { class: 'link', type: 'button', text: '猜不出来，直接看答案', on: { click: function () { reveal(null); } } }));
+  }
+
+  function legacyNotice() {
+    return h('p', { class: 'verdict-sub', text: '这是旧版链接，分数和细节未完整保留。请 ta 重新分享，查看完整结果。' });
   }
 
   function joinNames(list) {
@@ -427,10 +432,14 @@
     root.appendChild(heroBlock(f, 'ta 的猫系生活型'));
     root.appendChild(h('p', { class: 'verdict', text: verdict }));
     root.appendChild(h('p', { class: 'verdict-sub', text: sub }));
+    if (f.legacy) root.appendChild(legacyNotice());
     root.appendChild(descBox(main));
     root.appendChild(subCats(f, 'ta '));
     root.appendChild(chartBox(f, 'ta '));
     root.appendChild(tagsRow(main));
+    var sb = saysBox(f.says, ' ta ');
+    if (sb) root.appendChild(sb);
+    root.appendChild(pairBox(main, real));
 
     var me = store.get('me', null);
     if (me && E.byId[me.catId]) {
@@ -449,7 +458,7 @@
   function showMine() {
     var me = store.get('me', null);
     if (!me || !E.byId[me.catId]) { startQuiz(); return; }
-    var r = { s: me.s, catId: me.catId, hiddenId: me.hiddenId, says: me.says || [] };
+    var r = { s: me.s, catId: me.catId, hiddenId: me.hiddenId, says: me.says || [], mixSharpness: me.mixSharpness };
     state.result = r;
     renderResult(r); show('result');
   }
@@ -690,10 +699,13 @@
   // ---------- 路由 ----------
   function route() {
     var hash = location.hash || '';
-    if (/^#g-/.test(hash)) {
+    if (/^#(?:g-|r2-)/.test(hash)) {
       var f = E.decode(hash);
       if (f) {
-        if (store.get('lastShare', '') === hash.slice(1)) { showMine(); toast('这是你自己的分享链接'); return; }
+        if (!f.legacy && store.get('lastShare', '') === hash.slice(1)) {
+          state.friend = null; state.result = f;
+          renderResult(f); show('result'); toast('这是你自己的分享链接'); return;
+        }
         state.friend = f; state.friendHash = hash.slice(1);
         renderGuess(); show('guess');
         return;
