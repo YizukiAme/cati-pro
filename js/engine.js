@@ -159,10 +159,8 @@
     function flip(v, idx) {
       return v.map(function (x, i) { return idx.indexOf(i) >= 0 ? -x : x; });
     }
-    // 天生一对：生活方式一样（贴贴、爱野），脾气互补（细腻、直球）
+    // 最佳配对：节奏一样（贴贴、心动），性子互补（敏感、直球）
     function soulmate(c) { return catForSigns(flip(c.v, [1, 2])); }
-    // 相爱相杀：生活方式全反着来
-    function rival(c) { return catForSigns(flip(c.v, [0, 3])); }
     // 最佳友伴：脾气和节奏都一样，只是一个黏人一个独立
     function buddy(c) { return catForSigns(flip(c.v, [0])); }
 
@@ -175,17 +173,11 @@
       return { same: same, title: D.PAIR.titles[same], lines: lines };
     }
 
-    // 猜错的地方：在你眼里 ta 更 X，其实 ta 更 Y
+    // 猜错的地方：哪个维度，ta 真实的方向是哪边
     function guessDiff(guessV, realV) {
       var diff = [];
       for (var i = 0; i < 4; i++) {
-        if (guessV[i] !== realV[i]) {
-          var dim = D.DIMS[i];
-          diff.push({
-            guess: guessV[i] > 0 ? dim.pos : dim.neg,
-            real: realV[i] > 0 ? dim.pos : dim.neg
-          });
-        }
+        if (guessV[i] !== realV[i]) diff.push({ key: DK[i], real: realV[i] > 0 ? 'pos' : 'neg' });
       }
       return diff;
     }
@@ -217,7 +209,7 @@
       ALL: ALL, byId: byId, maxAbs: maxAbs,
       weights: weights, answered: answered, scores: scores, signs: signs,
       catForSigns: catForSigns, catForScores: catForScores, mix: mix, result: result,
-      lean: lean, code: code, soulmate: soulmate, rival: rival, buddy: buddy, pair: pair, guessDiff: guessDiff,
+      lean: lean, code: code, soulmate: soulmate, buddy: buddy, pair: pair, guessDiff: guessDiff,
       encode: encode, decode: decode
     };
   }

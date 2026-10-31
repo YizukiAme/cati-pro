@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CATI · PRO｜测测你是哪只小猫</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="测测你是哪只小猫：19 道题，16 只猫，测完让朋友先猜你是哪只。">
+<meta name="description" content="测测你是哪只小猫：24 道题，16 只猫，测完让 ta 先猜你是哪只。">
 <meta name="theme-color" content="#F4F2EC">
 <style>
 /* 版式跟原版 cati 一致：米色纸面、方角、黑色按钮、细字重、拉开字距的小标签；只有浅色一种样子 */
@@ -62,6 +62,7 @@ svg { display: block; }
 .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .link { background: none; border: 0; padding: 6px 2px; color: var(--ink-2); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
 .spaced { font-size: 12px; letter-spacing: .26em; color: var(--ink-2); font-weight: 400; }
+.lat { letter-spacing: 0; }
 
 /* ---------- 封面 ---------- */
 #s-cover { align-items: center; text-align: center; padding-top: 44px; gap: 0; }
@@ -151,13 +152,13 @@ svg { display: block; }
 .twin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .twin > div { background: var(--panel-2); padding: 12px 14px; min-width: 0; }
 .twin small { display: block; font-size: 12px; color: var(--ink-2); letter-spacing: .1em; }
-.twin p { margin: 2px 0 0; font-size: 14.5px; font-weight: 600; line-height: 1.5; }
+.twin p { margin: 2px 0 0; font-size: 14.5px; font-weight: 600; line-height: 1.5; word-break: keep-all; overflow-wrap: break-word; overflow-wrap: anywhere; }
 .says { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 15px; }
 .says li::before { content: "· "; color: var(--ink-3); }
 .pair-box { display: grid; gap: 8px; }
 .pair-item { background: var(--panel-2); padding: 12px 16px; font-size: 14.5px; line-height: 1.6; color: var(--ink-2); }
 .pair-item b { color: var(--ink-1); font-weight: 600; }
-.pair-item button { background: none; border: 0; padding: 0; font-weight: 600; color: var(--ink-1); text-decoration: underline; text-underline-offset: 3px; }
+.pair-item button { background: none; border: 0; padding: 0; font-weight: 600; color: var(--ink-1); }
 
 .duo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; gap: 4px; }
 .duo .mini { padding: 6px 4px; display: grid; justify-items: center; gap: 2px; }
@@ -203,6 +204,7 @@ svg { display: block; }
 .g-who { font-size: 11px; font-weight: 600; background: var(--ink-1); color: var(--on-accent); padding: 2px 8px; margin-left: auto; flex: none; max-width: 38%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-desc { font-size: 14px; line-height: 1.8; color: var(--ink-2); margin: 0; }
 .g-pair { font-size: 13px; color: var(--ink-3); margin: 0; }
+.g-pair span { display: inline-block; }
 
 /* ---------- 猫的小动画：眨眼、甩尾巴 ---------- */
 .anim .ca-lid { transform-box: fill-box; transform-origin: 50% 0%; animation: blink 4.6s infinite; }
