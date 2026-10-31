@@ -88,7 +88,7 @@
   }
 
   function baseUrl() { return location.href.split('#')[0]; }
-  function shareLink(r) { return baseUrl() + '#' + E.encode(r); }
+  function shareLink(r, direct) { return baseUrl() + '#' + E.encode(r) + (direct ? '/result' : ''); }
 
   function copy(text) {
     function fallback() {
@@ -224,12 +224,6 @@
   }
 
   // ---------- 结果页的块 ----------
-  function stamp(v) {
-    var st = h('div', { class: 'stamp', 'aria-label': '四个维度：' + E.code(v) });
-    E.code(v).split('').forEach(function (ch) { st.appendChild(h('span', { text: ch })); });
-    return st;
-  }
-
   function heroBlock(r, label) {
     var c = mainOf(r), f = form(r);
     return h('div', { class: 'res-hero', style: banner(c) }, [
@@ -239,7 +233,6 @@
       h('div', { class: 'spaced' }, spacedKids(label || '你的猫系生活型')),
       h('h2', { class: 'res-name', text: c.name }),
       h('p', { class: 'res-title', text: '—— ' + c.title }),
-      stamp(f.v),
       c.hidden ? h('p', { class: 'res-form', text: '猫形态：' + full(f) }) : null
     ]);
   }
@@ -352,7 +345,7 @@
         h('button', { class: 'btn btn-ghost', type: 'button', text: '猫猫图鉴', on: { click: openGallery } })
       ]),
       h('button', { class: 'btn btn-primary', type: 'button', text: '分享给朋友', on: { click: function () { shareResult(r, linkbox); } } }),
-      h('button', { class: 'btn btn-ghost', type: 'button', text: '生成结果图', on: { click: function () { openPoster(r); } } }),
+      h('button', { class: 'btn btn-ghost', type: 'button', text: '生成分享图', on: { click: function () { openPoster(r); } } }),
       linkbox
     ]));
   }
@@ -388,7 +381,7 @@
     var grid = h('div', { class: 'pick-grid' });
     D.CATS.forEach(function (c) {
       grid.appendChild(h('button', { class: 'pick', type: 'button', 'aria-label': '猜 ta 是' + c.name, on: { click: function () { reveal(c.id); } } }, [
-        h('div', { html: art(c.id, 'head') }), h('span', { text: c.name }), h('small', { text: E.code(c.v) })
+        h('div', { html: art(c.id, 'head') }), h('span', { text: c.name })
       ]));
     });
     root.appendChild(grid);
@@ -405,11 +398,12 @@
     return names.slice(0, -1).join('、') + '和' + names[names.length - 1];
   }
 
-  function reveal(guessId) {
+  function reveal(guessId, direct) {
     var f = state.friend, root = $('#s-guess');
     var real = form(f), main = mainOf(f);
     var verdict, sub;
-    if (!guessId) { verdict = 'ta 是' + main.name; sub = '下次先猜一下嘛，猜错才好玩(￣▽￣)'; }
+    if (direct) { verdict = ''; sub = ''; }
+    else if (!guessId) { verdict = 'ta 是' + main.name; sub = '下次先猜一下嘛，猜错才好玩(￣▽￣)'; }
     else {
       // 猜错的每个维度，按 ta 真实的方向给一句话
       var g = cat(guessId), diff = E.guessDiff(g.v, real.v);
@@ -420,7 +414,7 @@
       else if (diff.length === 3) { verdict = 'ta 藏得有点深(・_・?)'; sub = '你猜的是' + g.name + '。' + lines.slice(0, 2).join('') + '剩下那一处，你自己去问 ta 吧。'; }
       else { verdict = '完美错过(°ー°〃)'; sub = '你猜的是' + g.name + '，全猜反了。这也算一种默契吧。'; }
     }
-    if (main.hidden) sub += '而且 ta 测出了隐藏款「' + main.name + '」！';
+    if (main.hidden && !direct) sub += '而且 ta 测出了隐藏款「' + main.name + '」！';
 
     // 记进图鉴
     var friends = store.get('friends', []);
@@ -430,8 +424,8 @@
 
     root.innerHTML = '';
     root.appendChild(heroBlock(f, 'ta 的猫系生活型'));
-    root.appendChild(h('p', { class: 'verdict', text: verdict }));
-    root.appendChild(h('p', { class: 'verdict-sub', text: sub }));
+    if (verdict) root.appendChild(h('p', { class: 'verdict', text: verdict }));
+    if (sub) root.appendChild(h('p', { class: 'verdict-sub', text: sub }));
     if (f.legacy) root.appendChild(legacyNotice());
     root.appendChild(descBox(main));
     root.appendChild(subCats(f, 'ta '));
@@ -519,11 +513,11 @@
   var lastFocus = null;
   function openSheet(title, kids) {
     var sheet = $('#sheet');
+    if ($('#overlay').hidden) lastFocus = document.activeElement;
     sheet.innerHTML = '';
     var close = h('button', { class: 'x-btn', type: 'button', 'aria-label': '关闭', text: '×', on: { click: closeSheet } });
     sheet.appendChild(h('div', { class: 'sheet-top' }, [h('b', { id: 'sheet-title', text: title }), close]));
     kids.forEach(function (k) { if (k) sheet.appendChild(k); });
-    lastFocus = document.activeElement;
     $('#overlay').hidden = false;
     document.body.style.overflow = 'hidden';
     sheet.scrollTop = 0;
@@ -541,8 +535,7 @@
       h('span', { class: 'no', text: 'NO.' + c.no }),
       h('div', { class: 'res-cat anim', html: art(c.id, 'full') }),
       h('h2', { class: 'res-name', text: c.name }),
-      h('p', { class: 'res-title', text: '—— ' + c.title }),
-      c.v ? stamp(c.v) : null
+      h('p', { class: 'res-title', text: '—— ' + c.title })
     ]);
     openSheet('NO.' + c.no + ' ' + c.name, [hero, descBox(c), tagsRow(c), c.v ? pairBox(c, c) : null]);
   }
@@ -587,35 +580,27 @@
       if (qr.isDark(r, c)) ctx.fillRect(Math.floor(x + (c + q) * cell), Math.floor(y + (r + q) * cell), Math.ceil(cell), Math.ceil(cell));
     }
   }
-  function stampAt(ctx, chars, cx, y, box) {
-    var gap = 12, total = chars.length * box + (chars.length - 1) * gap, x = cx - total / 2;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    chars.forEach(function (ch, i) {
-      var bx = x + i * (box + gap);
-      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(bx, y, box, box);
-      ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.strokeRect(bx, y, box, box);
-      ctx.fillStyle = INK; ctx.font = font(700, box * 0.48);
-      ctx.fillText(ch, bx + box / 2, y + box / 2 + 2);
-    });
-    ctx.textBaseline = 'alphabetic';
-  }
   function bannerFill(ctx, c, x, y, w, hh) {
     var g = ctx.createLinearGradient(0, y, 0, y + hh);
     g.addColorStop(0, rgba(c.color, 0.24)); g.addColorStop(0.6, rgba(c.color, 0.06)); g.addColorStop(1, rgba(c.color, 0));
     ctx.fillStyle = g; ctx.fillRect(x, y, w, hh);
   }
 
-  function drawResultPoster(r) {
-    var c = mainOf(r), f = form(r), link = shareLink(r);
+  function drawResultPoster(r, guessing) {
+    // 猜猜版所有结果使用同一个造型和配色，编号、称号也不提前揭晓。
+    var c = guessing ? { color: '#C9C5BD' } : mainOf(r);
+    var link = shareLink(r, !guessing);
     var W = 1080, H = 1440;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d');
     var AW = 780, AH = Math.round(780 * A.aspect);
-    return loadSvg(A.svg(c.id, { uid: 'pst', size: AW })).then(function (img) {
+    return loadSvg(A.svg(guessing ? 'mystery' : c.id, { uid: 'pst', size: AW })).then(function (img) {
       ctx.fillStyle = PAGE; ctx.fillRect(0, 0, W, H);
       bannerFill(ctx, c, 0, 0, W, 980);
       ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.font = font(800, 40); ctx.fillText(D.META.name, 64, 92);
-      ctx.fillStyle = INK2; ctx.textAlign = 'right'; ctx.font = font(400, 26); ctx.fillText('NO.' + c.no, W - 64, 90);
+      if (!guessing) {
+        ctx.fillStyle = INK2; ctx.textAlign = 'right'; ctx.font = font(400, 26); ctx.fillText('NO.' + c.no, W - 64, 90);
+      }
       if (c.hidden) {
         ctx.font = font(600, 26); var bw = ctx.measureText('隐藏款').width + 36;
         ctx.fillStyle = INK; ctx.fillRect(W - 64 - bw, 112, bw, 46);
@@ -623,25 +608,24 @@
       }
       ctx.drawImage(img, (W - AW) / 2, 150, AW, AH);
       ctx.fillStyle = INK2; ctx.font = font(400, 28);
-      spacedText(ctx, '我的猫系生活型', W / 2, 726, 9);
+      spacedText(ctx, guessing ? '猜猜我的猫系生活型' : '我的猫系生活型', W / 2, 726, 9);
       ctx.fillStyle = INK; ctx.textAlign = 'center';
-      ctx.font = font(800, 112); ctx.fillText(c.name, W / 2, 846);
-      ctx.font = font(600, 44); ctx.fillText('—— ' + c.title, W / 2, 914);
-      stampAt(ctx, E.code(f.v).split(''), W / 2, 950, 64);
+      ctx.font = font(800, guessing ? 80 : 112); ctx.fillText(guessing ? '我是哪只小猫？' : c.name, W / 2, 846);
+      ctx.font = font(600, guessing ? 36 : 44); ctx.fillText(guessing ? '答案先保密，等你来猜(￣▽￣)' : '—— ' + c.title, W / 2, 914);
       // 下方的方框：二维码 + 一句钩子
-      var px = 56, py = 1060, pw = W - px * 2, ph = 300;
+      var px = 56, py = 1000, pw = W - px * 2, ph = 352;
       ctx.fillStyle = BG; ctx.fillRect(px, py, pw, ph);
       ctx.lineWidth = 2; ctx.strokeStyle = BORDER; ctx.strokeRect(px, py, pw, ph);
       var qr = 236, qx = px + pw - qr - 32, qy = py + 32;
       drawQR(ctx, link, qx, qy, qr);
       var tx = px + 40, tw = qx - tx - 30;
       ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = font(700, 38);
-      ctx.fillText('先猜猜我是哪只小猫', tx, py + 80);
+      ctx.fillText(guessing ? '这次，轮到你来猜' : '你觉得像我吗？', tx, py + 80);
       ctx.font = font(400, 28); ctx.fillStyle = INK2;
-      var lines = wrap(ctx, '别人眼中：' + c.seen, tw).concat(wrap(ctx, '其实：' + c.real, tw));
+      var lines = guessing ? ['凭你对我的了解，', '第一直觉会是哪只？'] : wrap(ctx, '别人眼中：' + c.seen, tw).concat(wrap(ctx, '其实：' + c.real, tw));
       lines.slice(0, 4).forEach(function (l, i) { ctx.fillText(l, tx, py + 136 + i * 40); });
       ctx.font = font(400, 22); ctx.fillStyle = INK3;
-      ctx.fillText(c.hidden ? '猫形态：' + f.name + '　扫码先猜再看(￣﹃￣)' : '扫码先猜，猜对了算你懂我(￣﹃￣)', tx, py + ph - 28);
+      ctx.fillText(guessing ? '扫码选一只，再揭晓答案' : '扫码看完整结果', tx, py + ph - 28);
       ctx.textAlign = 'center'; ctx.fillStyle = INK3; ctx.font = font(400, 24);
       ctx.fillText(D.META.name + '｜测测你是哪只小猫', W / 2, H - 34);
       return cv.toDataURL('image/png');
@@ -650,7 +634,7 @@
 
   function drawPairPoster(meR, frR) {
     var mc = mainOf(meR), fc = mainOf(frR), p = E.pair(form(meR).v, form(frR).v);
-    var link = shareLink(meR);
+    var link = shareLink(meR, true);
     var W = 1080, H = 1440;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d');
@@ -677,7 +661,7 @@
       });
       var qr = 160; drawQR(ctx, link, W - 76 - qr, H - 64 - qr, qr);
       ctx.font = font(400, 26); ctx.fillStyle = INK2;
-      ctx.fillText('扫码猜猜我是哪只小猫', 76, H - 122);
+      ctx.fillText('扫码看我的完整结果', 76, H - 122);
       ctx.fillStyle = INK3; ctx.fillText(D.META.name + '｜测测你是哪只小猫', 76, H - 80);
       return cv.toDataURL('image/png');
     });
@@ -693,12 +677,24 @@
       holder.textContent = '图片没画出来，可以直接截图这一页(｡•́︿•̀｡)';
     });
   }
-  function openPoster(r) { posterSheet('结果图', drawResultPoster(r), '长按图片保存，发给朋友吧'); }
+  function openPoster(r) {
+    function choice(title, detail, guessing) {
+      return h('button', { class: 'btn poster-choice ' + (guessing ? 'btn-primary' : 'btn-ghost'), type: 'button', on: { click: function () {
+        posterSheet(guessing ? '猜猜版分享图' : '结果版分享图', drawResultPoster(r, guessing), '长按图片保存，发给 ta 吧');
+      } } }, [h('b', { text: title }), h('small', { text: detail })]);
+    }
+    openSheet('想怎么分享？', [
+      choice('让 ta 猜猜', '先不剧透，扫码猜完再揭晓', true),
+      choice('晒出我的结果', '展示猫型，扫码看完整结果', false)
+    ]);
+  }
   function openPairPoster(meR, frR) { posterSheet('CP 卡', drawPairPoster(meR, frR), '长按图片保存，发给 ta 吧'); }
 
   // ---------- 路由 ----------
   function route() {
     var hash = location.hash || '';
+    var direct = /\/result$/.test(hash);
+    if (direct) hash = hash.slice(0, -7);
     if (/^#(?:g-|r2-)/.test(hash)) {
       var f = E.decode(hash);
       if (f) {
@@ -707,7 +703,8 @@
           renderResult(f); show('result'); toast('这是你自己的分享链接'); return;
         }
         state.friend = f; state.friendHash = hash.slice(1);
-        renderGuess(); show('guess');
+        if (direct) reveal(null, true);
+        else { renderGuess(); show('guess'); }
         return;
       }
     }

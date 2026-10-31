@@ -332,7 +332,12 @@
     var u = opt.uid || ('ca' + (++n));
     var full = opt.crop !== 'head';
     var vb = full ? VB_FULL : VB_HEAD;
-    var body = id === 'dog' ? dog(u, full) : cat(SPECS[id] || SPECS.blue, u, full);
+    var body;
+    if (id === 'mystery') {
+      body = (full ? stroke(TAIL, '#BDBAB3', 25) + stroke(TAIL, '#D9D6CD', 21) : '') +
+        p(BODY, '#D9D6CD', ' stroke="#BDBAB3" stroke-width="2" stroke-linejoin="round"') +
+        '<text x="168" y="211" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="74" fill="' + INK + '">?</text>';
+    } else body = id === 'dog' ? dog(u, full) : cat(SPECS[id] || SPECS.blue, u, full);
     var size = '';
     if (opt.size) size = full ? ' width="' + opt.size + '" height="' + Math.round(opt.size * 256 / 384) + '"' : ' width="' + opt.size + '" height="' + opt.size + '"';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '"' + size + ' aria-hidden="true">' + body + '</svg>';
