@@ -87,7 +87,11 @@
     toastTimer = setTimeout(function () { t.hidden = true; }, 2400);
   }
 
-  function baseUrl() { return location.href.split('#')[0]; }
+  // 放到网上时去掉结尾的 index.html，链接短一点；本地双击打开（file://）时不能去
+  function baseUrl() {
+    var u = location.href.split('#')[0];
+    return /^https?:/.test(u) ? u.replace(/index\.html$/, '') : u;
+  }
   function shareLink(r, direct) { return baseUrl() + '#' + E.encode(r) + (direct ? '/result' : ''); }
 
   function copy(text) {
@@ -704,7 +708,7 @@
     var hash = location.hash || '';
     var direct = /\/result$/.test(hash);
     if (direct) hash = hash.slice(0, -7);
-    if (/^#(?:g-|r2-)/.test(hash)) {
+    if (/^#(?:g-|r2-|r3-)/.test(hash)) {
       var f = E.decode(hash);
       if (f) {
         if (!f.legacy && store.get('lastShare', '') === hash.slice(1)) {
