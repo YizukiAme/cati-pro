@@ -598,36 +598,42 @@
       ctx.fillStyle = PAGE; ctx.fillRect(0, 0, W, H);
       bannerFill(ctx, c, 0, 0, W, 980);
       ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.font = font(800, 40); ctx.fillText(D.META.name, 64, 92);
-      if (!guessing) {
-        ctx.fillStyle = INK2; ctx.textAlign = 'right'; ctx.font = font(400, 26); ctx.fillText('NO.' + c.no, W - 64, 90);
-      }
+      // 右上角：普通猫写编号，隐藏款只放黑底标（两个都放就重复了）
       if (c.hidden) {
         ctx.font = font(600, 26); var bw = ctx.measureText('隐藏款').width + 36;
-        ctx.fillStyle = INK; ctx.fillRect(W - 64 - bw, 112, bw, 46);
-        ctx.fillStyle = PAGE; ctx.textAlign = 'center'; ctx.fillText('隐藏款', W - 64 - bw / 2, 144);
+        ctx.fillStyle = INK; ctx.fillRect(W - 64 - bw, 56, bw, 46);
+        ctx.fillStyle = PAGE; ctx.textAlign = 'center'; ctx.fillText('隐藏款', W - 64 - bw / 2, 88);
+      } else if (!guessing) {
+        ctx.fillStyle = INK2; ctx.textAlign = 'right'; ctx.font = font(400, 26); ctx.fillText('NO.' + c.no, W - 64, 90);
       }
       ctx.drawImage(img, (W - AW) / 2, 150, AW, AH);
+      // 两张图同一副骨架：一张是问号，一张是答案
       ctx.fillStyle = INK2; ctx.font = font(400, 28);
-      spacedText(ctx, guessing ? '猜猜我的猫系生活型' : '我的猫系生活型', W / 2, 726, 9);
+      spacedText(ctx, '我的猫系生活型', W / 2, 726, 9);
       ctx.fillStyle = INK; ctx.textAlign = 'center';
-      ctx.font = font(800, guessing ? 80 : 112); ctx.fillText(guessing ? '我是哪只小猫？' : c.name, W / 2, 846);
-      ctx.font = font(600, guessing ? 36 : 44); ctx.fillText(guessing ? '答案先保密，等你来猜(￣▽￣)' : '—— ' + c.title, W / 2, 914);
+      ctx.font = font(800, guessing ? 100 : 112); ctx.fillText(guessing ? '我是哪只小猫？' : c.name, W / 2, 846);
+      ctx.font = font(600, guessing ? 40 : 44); ctx.fillText(guessing ? '猜对了，算你懂我(￣▽￣)' : '—— ' + c.title, W / 2, 914);
       // 下方的方框：二维码 + 一句钩子
       var px = 56, py = 1000, pw = W - px * 2, ph = 352;
       ctx.fillStyle = BG; ctx.fillRect(px, py, pw, ph);
       ctx.lineWidth = 2; ctx.strokeStyle = BORDER; ctx.strokeRect(px, py, pw, ph);
-      var qr = 236, qx = px + pw - qr - 32, qy = py + 32;
+      var qr = guessing ? 288 : 236, qx = px + pw - qr - 32, qy = py + (ph - qr) / 2;
       drawQR(ctx, link, qx, qy, qr);
       var tx = px + 40, tw = qx - tx - 30;
-      ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = font(700, 38);
-      ctx.fillText(guessing ? '这次，轮到你来猜' : '你觉得像我吗？', tx, py + 80);
-      ctx.font = font(400, 28); ctx.fillStyle = INK2;
-      var lines = guessing ? ['凭你对我的了解，', '第一直觉会是哪只？'] : wrap(ctx, '别人眼中：' + c.seen, tw).concat(wrap(ctx, '其实：' + c.real, tw));
-      lines.slice(0, 4).forEach(function (l, i) { ctx.fillText(l, tx, py + 136 + i * 40); });
-      ctx.font = font(400, 22); ctx.fillStyle = INK3;
-      ctx.fillText(guessing ? '扫码选一只，再揭晓答案' : '扫码看完整结果', tx, py + ph - 28);
+      ctx.textAlign = 'left'; ctx.fillStyle = INK;
+      if (guessing) {
+        // 猜猜版只留一个动作
+        ctx.font = font(700, 48); ctx.fillText('扫码猜一猜', tx, py + ph / 2 + 16);
+      } else {
+        ctx.font = font(700, 38); ctx.fillText('你觉得像我吗？', tx, py + 80);
+        ctx.font = font(400, 28); ctx.fillStyle = INK2;
+        var lines = wrap(ctx, '别人眼中：' + c.seen, tw).concat(wrap(ctx, '其实：' + c.real, tw));
+        lines.slice(0, 4).forEach(function (l, i) { ctx.fillText(l, tx, py + 136 + i * 40); });
+        ctx.font = font(400, 22); ctx.fillStyle = INK3;
+        ctx.fillText('扫码看完整结果', tx, py + ph - 28);
+      }
       ctx.textAlign = 'center'; ctx.fillStyle = INK3; ctx.font = font(400, 24);
-      ctx.fillText(D.META.name + '｜测测你是哪只小猫', W / 2, H - 34);
+      ctx.fillText('测测你是哪只小猫', W / 2, H - 34);
       return cv.toDataURL('image/png');
     });
   }
@@ -662,7 +668,7 @@
       var qr = 160; drawQR(ctx, link, W - 76 - qr, H - 64 - qr, qr);
       ctx.font = font(400, 26); ctx.fillStyle = INK2;
       ctx.fillText('扫码看我的完整结果', 76, H - 122);
-      ctx.fillStyle = INK3; ctx.fillText(D.META.name + '｜测测你是哪只小猫', 76, H - 80);
+      ctx.fillStyle = INK3; ctx.fillText('测测你是哪只小猫', 76, H - 80);
       return cv.toDataURL('image/png');
     });
   }
