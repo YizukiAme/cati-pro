@@ -224,7 +224,9 @@ svg { display: block; }
 }
 .sheet-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .sheet-top b { font-size: 16px; font-weight: 700; }
-.poster-choice { display: grid; justify-items: start; gap: 4px; text-align: left; }
+.poster-choice { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 14px; padding: 16px; text-align: left; }
+.poster-choice-cat svg { display: block; width: 100%; height: auto; }
+.poster-choice-copy { display: grid; gap: 4px; }
 .poster-choice small { font-size: 13px; font-weight: 400; opacity: .75; }
 .x-btn { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--bg); font-size: 18px; line-height: 1; }
 .sheet .res-hero { margin: 0; }

@@ -681,7 +681,10 @@
     function choice(title, detail, guessing) {
       return h('button', { class: 'btn poster-choice ' + (guessing ? 'btn-primary' : 'btn-ghost'), type: 'button', on: { click: function () {
         posterSheet(guessing ? '猜猜版分享图' : '结果版分享图', drawResultPoster(r, guessing), '长按图片保存，发给 ta 吧');
-      } } }, [h('b', { text: title }), h('small', { text: detail })]);
+      } } }, [
+        h('span', { class: 'poster-choice-cat', html: art(guessing ? 'mystery' : mainOf(r).id, 'full') }),
+        h('span', { class: 'poster-choice-copy' }, [h('b', { text: title }), h('small', { text: detail })])
+      ]);
     }
     openSheet('想怎么分享？', [
       choice('让 ta 猜猜', '先不剧透，扫码猜完再揭晓', true),
